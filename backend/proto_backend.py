@@ -29,7 +29,7 @@ class User:
 
 class Post:
 
-    def __init__(self, author_user, location, time_creation, time_expiration, group_current, group_size_max, course):
+    def __init__(self, author_user, location, time_expiration, group_current, group_size_max, course):
         self.author_user = author_user
         self.location = location
         self.time_creation = datetime.datetime.now()
@@ -48,9 +48,13 @@ class Post:
     def get_location(self):
         return self.location
     def get_time_creation(self):
-        return self.time_creation
+        time = str(self.time_creation).split(" ")[1].split(":")[0:2]
+        time = ":".join(time)
+        dt_object = datetime.datetime.strptime(time, "%H:%M")
+        normal_time = dt_object.strftime("%I:%M %p")
+        return normal_time
     def get_time_expiration(self):
-        return self.time_expiration
+        return str(self.time_expiration).split(":")[0]
     def get_course(self):
         return self.course
     def get_group_current(self):
@@ -106,22 +110,10 @@ def search(locations, course):
 
 #idiot testing
 #both match
-'''
-post1 = Post("post1","marston","na","na",1,2,"STA3100")
-post4 = Post("post4","marston","na","na",1,2,"STA3100")
 
-#one match
-post2 = Post("post2","lib west","na","na",1,2,"STA3100")
-post3 = Post("post3","marston","na","na",1,2,"COP3502")
-post5 = Post("post5","marston","na","na",1,2,"POS2100")
+post1 = Post("post1","marston",5,1,2,"STA3100")
 
-#no match
-post6 = Post("post6","newell","na","na",1,2,"STA3100")
-
-post_list.extend([post1,post2,post3,post4,post5,post6])
-
-print(search((2,"marston","lib west"),(1,"STA3100")))
-'''
+print(post1.get_time_creation())
 
 
 
