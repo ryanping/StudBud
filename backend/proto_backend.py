@@ -1,7 +1,8 @@
 import datetime
 
 class User:
-    def __init__(self, name, year, major, email):
+    def __init__(self, id, name, year, major, email):
+        self.id = id
         self.name = name
         self.year = year
         self.major = major
@@ -29,7 +30,8 @@ class User:
 
 class Post:
 
-    def __init__(self, author_user, location, time_expiration, group_current, group_size_max, course):
+    def __init__(self, id, author_user, location, time_expiration, group_current, group_size_max, course):
+        self.id = id
         self.author_user = author_user
         self.location = location
         self.time_creation = datetime.datetime.now()
@@ -83,37 +85,37 @@ class Post:
         if time_now - self.time_creation > self.time_expiration:
             self.show_in_results = False
 
-post_list = []
+
 
 #location -> (preference_ranking 1 or 2, location names); course -> (preference_ranking 1 or 2, course name)
-def search(locations, course):
-    two_match = []
-    first_pref_match = []
-    second_pref_match = []
+# def search(locations, course):
+#     two_match = []
+#     first_pref_match = []
+#     second_pref_match = []
 
-    for post in post_list:
-        match_location = (post.get_location() in locations[1:])
-        match_course = (post.get_course() == course[1])
-        if match_location and match_course:
-            two_match.append(post)
-        elif int(course[0]) == 1:
-            if match_course:
-                first_pref_match.append(post)
-            elif match_location:
-                second_pref_match.append(post)
-        elif int(locations[0]) == 1:
-            if match_location:
-                first_pref_match.append(post)
-            elif match_course:
-                second_pref_match.append(post)
-    return two_match + first_pref_match + second_pref_match
+#     for post in post_list:
+#         match_location = (post.get_location() in locations[1:])
+#         match_course = (post.get_course() == course[1])
+#         if match_location and match_course:
+#             two_match.append(post)
+#         elif int(course[0]) == 1:
+#             if match_course:
+#                 first_pref_match.append(post)
+#             elif match_location:
+#                 second_pref_match.append(post)
+#         elif int(locations[0]) == 1:
+#             if match_location:
+#                 first_pref_match.append(post)
+#             elif match_course:
+#                 second_pref_match.append(post)
+#     return two_match + first_pref_match + second_pref_match
 
 #idiot testing
 #both match
 
-post1 = Post("post1","marston",5,1,2,"STA3100")
+#post1 = Post("post1","marston",5,1,2,"STA3100")
 
-print(post1.get_time_creation())
+#print(post1.get_time_creation())
 
 
 
