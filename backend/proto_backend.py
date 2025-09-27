@@ -1,3 +1,6 @@
+import datetime
+
+
 class User:
     def __init__(self, name, year, major):
         self.name = name
@@ -23,12 +26,12 @@ class Post:
     def __init__(self, author_user, location, time_creation, time_expiration, group_current, group_size_max, course):
         self.author_user = author_user
         self.location = location
-        self.time_creation = time_creation
-        self.time_expiration = time_expiration
+        self.time_creation = datetime.datetime.now()
+        self.time_expiration = datetime.timedelta(hours=time_expiration)
         self.course = course
         self.group_current = group_current
         self.group_size_max = group_size_max
-        self.group_filled = False
+        self.show_in_results = True
 
     def __repr__(self):
         return self.author_user
@@ -48,20 +51,27 @@ class Post:
         return self.group_current
     def get_group_size_max(self):
         return self.group_size_max
-    def get_group_filled(self):
-        return self.group_filled
+    def get_results_status(self):
+        return self.show_in_results
 
-
-    def check_if_group_filled(self):
+    def check_group_status(self):
         if self.group_current >= self.group_size_max:
-            self.group_filled = True
+            self.show_in_results = False
+        elif self.group_current < self.group_size_max:
+            self.show_in_results = True
 
     def increase_group_size(self):
         self.group_current += 1
-        self.check_if_group_filled()
+        self.check_group_status()
 
     def decrease_group_size(self):
         self.group_current -= 1
+        self.check_group_status()
+
+    def check_expiration(self):
+        time_now = datetime.datetime.now()
+        if time_now - self.time_creation > self.time_expiration:
+            self.show_in_results = False
 
 post_list = []
 
@@ -90,6 +100,7 @@ def search(locations, course):
 
 #idiot testing
 #both match
+'''
 post1 = Post("post1","marston","na","na",1,2,"STA3100")
 post4 = Post("post4","marston","na","na",1,2,"STA3100")
 
@@ -104,11 +115,7 @@ post6 = Post("post6","newell","na","na",1,2,"STA3100")
 post_list.extend([post1,post2,post3,post4,post5,post6])
 
 print(search((2,"marston","lib west"),(1,"STA3100")))
-
-
-
-
-
+'''
 
 
 
