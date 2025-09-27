@@ -1,0 +1,5 @@
+# Environment variables
+.env
+sendgrid.env
+
+venv/
