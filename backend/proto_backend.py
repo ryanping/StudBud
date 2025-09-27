@@ -1,10 +1,14 @@
 import datetime
 
 class User:
-    def __init__(self, name, year, major):
+    def __init__(self, name, year, major, email):
         self.name = name
         self.year = year
         self.major = major
+        self.email = email
+
+    def __repr__(self):
+        return f"User({self.name}, {self.year}, {self.major})"
     #getter methods
     def get_name(self):
         return self.name
@@ -12,6 +16,9 @@ class User:
         return self.year
     def get_major(self):
         return self.major
+    def get_email(self):
+        return self.email
+
     #setter methods
     def set_name(self, name):
         self.name = name
@@ -20,8 +27,8 @@ class User:
     def set_major(self, major):
         self.major = major
 
-
 class Post:
+
     def __init__(self, author_user, location, time_creation, time_expiration, group_current, group_size_max, course):
         self.author_user = author_user
         self.location = location
@@ -85,12 +92,12 @@ def search(locations, course):
         match_course = (post.get_course() == course[1])
         if match_location and match_course:
             two_match.append(post)
-        elif course[0] == 1:
+        elif int(course[0]) == 1:
             if match_course:
                 first_pref_match.append(post)
             elif match_location:
                 second_pref_match.append(post)
-        elif locations[0] == 1:
+        elif int(locations[0]) == 1:
             if match_location:
                 first_pref_match.append(post)
             elif match_course:
