@@ -1,13 +1,14 @@
 # using SendGrid's Python Library
 # example on how it would work for messaging
 # https://github.com/sendgrid/sendgrid-python
+# THIS ISN'T NECESSARY
 import os
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
 message = Mail(
     from_email=os.environ.get('SENDER_EMAIL'),
-    to_emails='ryantram2005@gmail.com',
+    to_emails='EXAMPLE@gmail.com',
     subject='Sending with Twilio SendGrid is Fun',
     html_content='<strong>and easy to do anywhere, even with Python</strong>')
 try:
