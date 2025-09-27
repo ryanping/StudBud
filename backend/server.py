@@ -7,6 +7,7 @@ from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from dotenv import load_dotenv
 from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 from proto_backend import User, Post # Import your updated classes
 
@@ -17,6 +18,24 @@ CORS(app)
 bcrypt = Bcrypt(app)
 sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
 SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'rodgerssky01@gmail.com')
+
+'''
+message = Mail(
+    from_email='from_email@example.com',
+    to_emails='to@example.com',
+    subject='Sending with Twilio SendGrid is Fun',
+    html_content='<strong>and easy to do anywhere, even with Python</strong>')
+try:
+    sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+    # sg.set_sendgrid_data_residency("eu")
+    # uncomment the above line if you are sending mail using a regional EU subuser
+    response = sg.send(message)
+    print(response.status_code)
+    print(response.body)
+    print(response.headers)
+except Exception as e:
+    print(e.message)
+'''
 
 # --- DATABASE HELPER ---
 def get_db_connection():
@@ -38,6 +57,21 @@ def register():
             (data['email'], password_hash, data['display_name'], data.get('major'), data.get('year'))
         )
         conn.commit()
+
+        # Send verification email after successful registration
+        message = Mail(
+            from_email=SENDER_EMAIL,
+            to_emails=data['email'], # Dynamically use the new user's email
+            subject='Welcome to StudBud! Please Verify Your Email',
+            html_content='<strong>Your verification code is: 10000001</strong>')
+        try:
+            # The 'sg' client is already initialized globally
+            response = sg.send(message)
+            print(f"Email sent to {data['email']}, status code: {response.status_code}")
+        except Exception as e:
+            # Log the error, but don't block the registration success response
+            print(f"Error sending email: {e}")
+
     except sqlite3.IntegrityError:
         return jsonify({'error': 'User with this email already exists'}), 409
     finally:

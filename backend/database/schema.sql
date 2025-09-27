@@ -11,6 +11,9 @@ CREATE TABLE Users (
     display_name TEXT NOT NULL,
     year INTEGER,
     major TEXT
+    major TEXT,
+    verification_code TEXT,
+    is_verified INTEGER DEFAULT 0
 );
 
 CREATE TABLE Posts (
