@@ -1,5 +1,4 @@
 # backend/server.py
-
 import os
 import sqlite3
 from datetime import datetime, timedelta
@@ -7,14 +6,17 @@ from flask import Flask, request, jsonify
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from dotenv import load_dotenv
+from sendgrid import SendGridAPIClient
 
-from protobackend import User, Post # Import your updated classes
+from proto_backend import User, Post # Import your updated classes
 
 # --- APP CONFIGURATION ---
 load_dotenv()
 app = Flask(__name__)
 CORS(app)
 bcrypt = Bcrypt(app)
+sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'rodgerssky01@gmail.com')
 
 # --- DATABASE HELPER ---
 def get_db_connection():
