@@ -20,7 +20,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="index" // This links to index.tsx
+        name="post" // This links to post.tsx
         options={{
           title: 'Post',
           tabBarIcon: ({ color }) => <FontAwesome name="plus" color={color} size={28} />,
