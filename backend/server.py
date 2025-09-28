@@ -337,4 +337,6 @@ def search_posts_advanced():
 
 # --- MAIN EXECUTION ---
 if __name__ == '__main__':
+    # The 'debug=True' is great for development but should be off in production.
+    # Gunicorn will be used in production, so this is for local testing only.
     app.run(host='0.0.0.0', port=5000, debug=True)
