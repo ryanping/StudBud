@@ -34,7 +34,7 @@ export default function SetUp() {
         year: year,
         major: major,
       });
-      router.replace('/(tabs)/explore');
+      router.replace({ pathname: '/(tabs)/explore', params: { userId: userId } });
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || 'An unexpected error occurred.';
       Alert.alert('Profile Creation Failed', errorMessage);

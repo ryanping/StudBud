@@ -59,7 +59,7 @@ export default function IndexScreen() {
 
       if (isProfileComplete) {
         // If profile is complete, go to the main app
-        router.replace('/(tabs)/explore');
+        router.replace({ pathname: '/(tabs)/explore', params: { userId: userId } });
       } else {
         // If profile is not complete, navigate to the profile screen to finish setup
         // We can pass the userId as a query parameter

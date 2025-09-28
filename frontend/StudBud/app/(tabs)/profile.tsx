@@ -1,15 +1,46 @@
-import React, { useState } from 'react';
-import { StyleSheet, TextInput } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { StyleSheet, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { useLocalSearchParams, useFocusEffect } from 'expo-router';
+import axios from 'axios';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 
 export default function ProfileScreen() {
+    const { userId } = useLocalSearchParams();
     const [name, setName] = useState('');
     const [major, setMajor] = useState('');
     const [year, setYear] = useState('');
     const [email, setEmail] = useState('');
+    const [loading, setLoading] = useState(true);
 
+    const fetchProfile = useCallback(async () => {
+        if (!userId) {
+            Alert.alert('Error', 'Could not find user profile.');
+            setLoading(false);
+            return;
+        }
+        setLoading(true);
+        try {
+            const response = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/api/users/${userId}`);
+            const { display_name, major, year, email } = response.data;
+            setName(display_name || '');
+            setMajor(major || '');
+            setYear(year?.toString() || '');
+            setEmail(email || '');
+        } catch (error) {
+            Alert.alert('Error', 'Failed to fetch profile data.');
+        } finally {
+            setLoading(false);
+        }
+    }, [userId]);
+
+    useFocusEffect(
+        useCallback(() => {
+            fetchProfile();
+        }, [fetchProfile])
+    );
+    
     return (
         <ThemedView style={styles.container}>
             <ThemedText type="title">Name</ThemedText>
@@ -45,6 +76,7 @@ export default function ProfileScreen() {
                 placeholderTextColor="#999"
                 editable={false} // Email is usually not editable
             />
+            {loading && <ActivityIndicator size="large" color="#aeb3ffff" />}
         </ThemedView>
     );
 }
@@ -65,6 +97,6 @@ const styles = StyleSheet.create({
     color: 'white' // Assuming dark mode, adjust if needed
   },
   disabledInput: {
-    backgroundColor: '#333', // A slightly different background for disabled fields
+    backgroundColor: '#333333', // A slightly different background for disabled fields
   },
 });
