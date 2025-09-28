@@ -143,18 +143,57 @@ def get_user_profile():
 
 # --- POST & SEARCH API ROUTES ---
 
+@app.route('/api/posts', methods=['GET'])
+def get_active_posts():
+    """Fetches all active, non-expired posts with author information."""
+    conn = get_db_connection()
+    query = """
+        SELECT
+            p.id,
+            p.author_id,
+            u.display_name as author_name,
+            p.location,
+            p.activity,
+            p.people_needed,
+            p.people_joined,
+            p.created_at,
+            p.expires_at
+        FROM Posts p
+        JOIN Users u ON p.author_id = u.id
+        WHERE p.is_active = 1 AND p.expires_at > ?
+        ORDER BY p.created_at DESC
+    """
+    posts = conn.execute(query, (datetime.utcnow().isoformat(),)).fetchall()
+    conn.close()
+
+    return jsonify([dict(post) for post in posts])
+
 @app.route('/api/posts', methods=['POST'])
 def create_post():
     """Creates a new post."""
     data = request.get_json()
-    duration_hours = int(data['duration_hours'])
+
+    # --- Data Validation ---
+    required_fields = ['author_id', 'activity', 'location', 'people_needed', 'duration_hours']
+    if not all(field in data for field in required_fields):
+        return jsonify({'error': 'Missing required fields for post creation.'}), 400
+
+    try:
+        author_id = int(data['author_id'])
+        people_needed = int(data['people_needed'])
+        duration_hours = int(data['duration_hours'])
+    except (ValueError, TypeError):
+        return jsonify({'error': 'author_id, people_needed, and duration_hours must be integers.'}), 400
+    
+    # --- Calculate Timestamps ---
     created_at = datetime.utcnow()
     expires_at = created_at + timedelta(hours=duration_hours)
 
+    # --- Database Insertion ---
     conn = get_db_connection()
     conn.execute(
-        'INSERT INTO Posts (author_id, location, activity, people_needed, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?)',
-        (data['author_id'], data['location'], data['activity'], data['people_needed'], created_at.isoformat(), expires_at.isoformat())
+        'INSERT INTO Posts (author_id, location, activity, people_needed, people_joined, is_active, created_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        (author_id, data['location'], data['activity'], people_needed, 0, 1, created_at.isoformat(), expires_at.isoformat())
     )
     conn.commit()
     conn.close()
@@ -233,12 +272,19 @@ def search_posts_advanced():
         return jsonify({'error': "Priority must be 'location' or 'activity'."}), 400
 
     # Build the dynamic SQL query
-    query = "SELECT * FROM Posts WHERE is_active = 1 AND expires_at > ?"
+    query = """
+        SELECT
+            p.id, p.author_id, u.display_name as author_name, p.location,
+            p.activity, p.people_needed, p.people_joined, p.created_at, p.expires_at
+        FROM Posts p
+        JOIN Users u ON p.author_id = u.id
+        WHERE p.is_active = 1 AND p.expires_at > ?
+    """
     params = [datetime.utcnow().isoformat()]
 
     # Handle filters
     if activity and activity.lower() != 'any':
-        query += " AND activity = ?"
+        query += " AND p.activity = ?"
         params.append(activity)
 
     if locations and 'any' not in [loc.lower() for loc in locations]:
@@ -253,9 +299,9 @@ def search_posts_advanced():
     if priority == 'activity':
         order_by_clause = f"""
         ORDER BY CASE
-            WHEN activity = ? AND location IN ({location_placeholders}) THEN 1
-            WHEN activity = ? THEN 2
-            WHEN location IN ({location_placeholders}) THEN 3
+            WHEN p.activity = ? AND p.location IN ({location_placeholders}) THEN 1
+            WHEN p.activity = ? THEN 2
+            WHEN p.location IN ({location_placeholders}) THEN 3
             ELSE 4
         END
         """
@@ -263,9 +309,9 @@ def search_posts_advanced():
     else: # priority == 'location'
         order_by_clause = f"""
         ORDER BY CASE
-            WHEN activity = ? AND location IN ({location_placeholders}) THEN 1
-            WHEN location IN ({location_placeholders}) THEN 2
-            WHEN activity = ? THEN 3
+            WHEN p.activity = ? AND p.location IN ({location_placeholders}) THEN 1
+            WHEN p.location IN ({location_placeholders}) THEN 2
+            WHEN p.activity = ? THEN 3
             ELSE 4
         END
         """
