@@ -16,23 +16,25 @@ export default function SetUp() {
         <Text variant="headlineLarge" style={styles.title}>
           Create Profile
         </Text>
-
+        <ThemedText type = "subtitle">
+        This will be the name people will see when you post (make it your real name!).
+        </ThemedText>
         <TextInput
-          label="Name"
+          label="Enter Your Name"
           value={name}
           onChangeText={setName}
           style={styles.input}
         />
 
         <TextInput
-          label="Year"
+          label="Enter Your Graduation Year"
           value={year}
           onChangeText={setYear}
           style={styles.input}
         />
 
         <TextInput
-          label="Major"
+          label="Enter Your Major"
           value={major}
           onChangeText={setMajor}
           style={styles.input}
