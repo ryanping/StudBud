@@ -20,7 +20,7 @@ export default function SetUp() {
           Create Profile
         </Text>
         <ThemedText type = "subtitle">
-        This will be the name people will see when you post (make it your real name!).
+        The name entered below will be what people see when you post (make it your real name!).
         </ThemedText>
         <TextInput
           label="Enter Your Name"
@@ -70,6 +70,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   input: {
+    marginTop: 20,
     marginBottom: 10,
     width: '100%',
   },
