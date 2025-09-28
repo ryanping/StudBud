@@ -13,7 +13,7 @@ export default function TabTwoScreen() {
   return (
     <ThemedView style={styles.container}>
       <ThemedText type="title">
-        Explore
+        Create Post
       </ThemedText>
       <TextInput
                       style={styles.input}
