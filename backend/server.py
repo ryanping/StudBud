@@ -147,6 +147,14 @@ def get_user_profile():
 def get_active_posts():
     """Fetches all active, non-expired posts with author information."""
     conn = get_db_connection()
+    
+    # --- Cleanup Expired Posts ---
+    # Before fetching, we can perform a cleanup of posts that have expired.
+    # This keeps the database clean.
+    now_iso = datetime.utcnow().isoformat()
+    conn.execute('DELETE FROM Posts WHERE expires_at <= ?', (now_iso,))
+    conn.commit()
+    
     query = """
         SELECT
             p.id,
@@ -160,10 +168,10 @@ def get_active_posts():
             p.expires_at
         FROM Posts p
         JOIN Users u ON p.author_id = u.id
-        WHERE p.is_active = 1 AND p.expires_at > ?
+        WHERE p.is_active = 1 -- We already deleted expired posts, so no need to check expires_at here.
         ORDER BY p.created_at DESC
     """
-    posts = conn.execute(query, (datetime.utcnow().isoformat(),)).fetchall()
+    posts = conn.execute(query).fetchall()
     conn.close()
 
     return jsonify([dict(post) for post in posts])
