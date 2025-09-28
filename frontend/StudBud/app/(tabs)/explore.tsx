@@ -12,9 +12,6 @@ import { Fonts } from '@/constants/theme';
 export default function ExploreScreen() {
   return (
     <ThemedView style={styles.container}>
-      <ThemedText type="title">
-        Explore
-      </ThemedText>
     </ThemedView>
   );
 }
