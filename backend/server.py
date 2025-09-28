@@ -142,6 +142,61 @@ def create_post():
     return jsonify({'message': 'Post created successfully'}), 201
 
 
+@app.route('/api/posts/<int:post_id>', methods=['PATCH'])
+def update_post(post_id):
+    """Updates specific fields of a post. Requires author authorization."""
+    data = request.get_json()
+    # For now, we get user_id from the body for testing.
+    # In a real app, this would come from a secure session token.
+    requesting_user_id = data.get('user_id')
+    if not requesting_user_id:
+        return jsonify({'error': 'Authentication is required.'}), 401
+
+    conn = get_db_connection()
+    # First, verify the user owns the post
+    post = conn.execute('SELECT author_id FROM Posts WHERE id = ?', (post_id,)).fetchone()
+
+    if not post:
+        conn.close()
+        return jsonify({'error': 'Post not found.'}), 404
+
+    if post['author_id'] != requesting_user_id:
+        conn.close()
+        return jsonify({'error': 'You are not authorized to edit this post.'}), 403
+
+    # Dynamically build the SET part of the UPDATE query
+    update_fields = []
+    params = []
+    
+    # List of fields a user is allowed to update
+    allowed_fields = ['location', 'activity', 'people_needed', 'people_joined', 'is_active']
+
+    for field in allowed_fields:
+        if field in data:
+            update_fields.append(f"{field} = ?")
+            params.append(data[field])
+
+    # Special case: updating duration recalculates expires_at
+    if 'duration_hours' in data:
+        duration_hours = int(data['duration_hours'])
+        new_expires_at = datetime.utcnow() + timedelta(hours=duration_hours)
+        update_fields.append("expires_at = ?")
+        params.append(new_expires_at.isoformat())
+
+    if not update_fields:
+        conn.close()
+        return jsonify({'error': 'No updateable fields provided.'}), 400
+
+    # Construct and execute the final query
+    query = f"UPDATE Posts SET {', '.join(update_fields)} WHERE id = ?"
+    params.append(post_id)
+    
+    conn.execute(query, tuple(params))
+    conn.commit()
+    conn.close()
+
+    return jsonify({'message': f'Post {post_id} updated successfully.'}), 200
+
 @app.route('/api/posts/search', methods=['POST'])
 def search_posts_advanced():
     """
