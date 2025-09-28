@@ -5,9 +5,6 @@ import { Image } from 'expo-image';
 import { Link, router } from 'expo-router';
 import axios from 'axios';
 
-// IMPORTANT: Make sure this matches the API_URL in your register screen
-const API_URL = 'http://????????:5000'; // Example IP, change this!
-
 export default function IndexScreen() {
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -24,7 +21,7 @@ export default function IndexScreen() {
     setLoading(true);
 
     try {
-      await axios.post(`${API_URL}/api/auth/send-code`, {
+      await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/api/auth/send-code`, {
         email: email,
       });
       Alert.alert('Success', 'A verification code has been sent to your email.');
@@ -46,7 +43,7 @@ export default function IndexScreen() {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_URL}/api/auth/verify-code`, {
+      const response = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/api/auth/verify-code`, {
         email: email,
         code: code,
       });
