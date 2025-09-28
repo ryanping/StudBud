@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, FlatList, ActivityIndicator, View } from 'react-native';
+import { StyleSheet, FlatList, ActivityIndicator, View, TextInput, Button } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -19,14 +19,42 @@ export default function ExploreScreen() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // State for search inputs
+  const [activity, setActivity] = useState('');
+  const [location, setLocation] = useState('');
 
   useEffect(() => {
     const fetchPosts = async () => {
+      setLoading(true);
+      setError(null);
+
+      // Determine if we are searching or just fetching all posts
+      const isSearching = activity.trim() !== '' || location.trim() !== '';
+      const url = isSearching
+        ? 'http://10.136.232.149:5000/api/posts/search'
+        : 'http://10.136.232.149:5000/api/posts';
+
+      const options: RequestInit = {
+        method: isSearching ? 'POST' : 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      };
+
+      if (isSearching) {
+        options.body = JSON.stringify({
+          activity: activity.trim() || 'any',
+          locations: location.trim() ? location.split(',').map(l => l.trim()) : [],
+          priority: 'activity', // Or 'location', depending on desired default
+        });
+      }
+
       try {
-        // IMPORTANT: Replace with your actual server IP/domain
-        const response = await fetch('http://10.136.232.149:5000/api/posts');
+        const response = await fetch(url, options);
         if (!response.ok) {
-          throw new Error('Failed to fetch posts');
+          const errData = await response.json();
+          throw new Error(errData.error || 'Failed to fetch posts');
         }
         const data = await response.json();
         setPosts(data);
@@ -38,7 +66,7 @@ export default function ExploreScreen() {
     };
 
     fetchPosts();
-  }, []);
+  }, [activity, location]); // Re-run the effect when search terms change
 
   const renderPost = ({ item }: { item: Post }) => (
     <ThemedView style={styles.postCard}>
@@ -50,13 +78,30 @@ export default function ExploreScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <ThemedText type="title">Explore</ThemedText>
+      <ThemedText type="title" style={styles.title}>Explore Posts</ThemedText>
+      
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Filter by activity (e.g., 'Studying')"
+          value={activity}
+          onChangeText={setActivity}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Filter by location (e.g., 'Library')"
+          value={location}
+          onChangeText={setLocation}
+        />
+      </View>
+
       {loading ? (
         <ActivityIndicator size="large" />
       ) : error ? (
         <ThemedText>Error: {error}</ThemedText>
       ) : (
-        <FlatList data={posts} renderItem={renderPost} keyExtractor={(item) => item.id.toString()} />
+        <FlatList data={posts} renderItem={renderPost} keyExtractor={(item) => item.id.toString()} ListEmptyComponent={<ThemedText>No posts found.</ThemedText>}
+        />
       )}
     </ThemedView>
   );
@@ -68,6 +113,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 20,
     gap: 16,
+  },
+  title: {
+    marginBottom: 8,
+  },
+  searchContainer: {
+    gap: 8,
+  },
+  input: {
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    backgroundColor: '#fff',
   },
   postCard: {
     padding: 16,
