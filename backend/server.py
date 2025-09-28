@@ -121,6 +121,22 @@ def create_or_update_profile():
     return jsonify({'message': 'Profile updated successfully.'}), 200
 
 
+@app.route('/api/users/<int:user_id>', methods=['GET'])
+def get_user_profile(user_id):
+    """Fetches a user's profile data."""
+    conn = get_db_connection()
+    user = conn.execute(
+        'SELECT id, display_name, email, year, major FROM Users WHERE id = ?',
+        (user_id,)
+    ).fetchone()
+    conn.close()
+
+    if user is None:
+        return jsonify({'error': 'User not found'}), 404
+
+    return jsonify(dict(user))
+
+
 # --- POST & SEARCH API ROUTES ---
 
 @app.route('/api/posts', methods=['POST'])
