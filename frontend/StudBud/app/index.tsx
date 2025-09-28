@@ -63,7 +63,7 @@ export default function IndexScreen() {
       } else {
         // If profile is not complete, navigate to the profile screen to finish setup
         // We can pass the userId as a query parameter
-        router.replace({ pathname: 'setup', params: { userId: userId, isNewUser: 'true' } });
+        router.replace({ pathname: '/setup', params: { userId: userId, isNewUser: 'true' } });
       }
 
     } catch (error: any) {
