@@ -5,10 +5,14 @@ import axios from 'axios';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Colors } from '@/constants/theme';
 
 export default function ProfileScreen() {
     const { email: userEmail } = useGlobalSearchParams<{ email: string }>();
     const [name, setName] = useState('');
+    const colorScheme = useColorScheme() ?? 'light';
+
     const [major, setMajor] = useState('');
     const [year, setYear] = useState('');
     const [email, setEmail] = useState('');
@@ -41,39 +45,54 @@ export default function ProfileScreen() {
         }, [fetchProfile])
     );
 
+    const inputStyle = {
+        height: 40,
+        borderColor: Colors[colorScheme].icon,
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingHorizontal: 10,
+        color: Colors[colorScheme].text,
+        width: '100%',
+    };
+
+    const disabledInputStyle = {
+        ...inputStyle,
+        backgroundColor: colorScheme === 'dark' ? '#333333' : '#E0E0E0',
+    };
+
     return (
         <ThemedView style={styles.container}>
             <ThemedText type="title">Name</ThemedText>
             <TextInput
-                style={styles.input}
+                style={inputStyle}
                 onChangeText={setName}
                 value={name}
                 placeholder="Firstname Lastname"
-                placeholderTextColor="#999"
+                placeholderTextColor={Colors[colorScheme].icon}
             />
             <ThemedText type="subtitle">Major: </ThemedText>
             <TextInput
-                style={styles.input}
+                style={inputStyle}
                 onChangeText={setMajor}
                 value={major}
                 placeholder="Major(s)"
-                placeholderTextColor="#999"
+                placeholderTextColor={Colors[colorScheme].icon}
             />
             <ThemedText type="subtitle">Year: </ThemedText>
             <TextInput
-                style={styles.input}
+                style={inputStyle}
                 onChangeText={setYear}
                 value={year}
                 placeholder="2xxx"
-                placeholderTextColor="#999"
+                placeholderTextColor={Colors[colorScheme].icon}
                 keyboardType="numeric"
             />
             <ThemedText type="subtitle">Email: </ThemedText>
             <TextInput
-                style={[styles.input, styles.disabledInput]}
+                style={disabledInputStyle}
                 value={email}
                 placeholder="user@ufl.edu"
-                placeholderTextColor="#999"
+                placeholderTextColor={Colors[colorScheme].icon}
                 editable={false} // Email is usually not editable
             />
             {loading && <ActivityIndicator size="large" color="#aeb3ffff" />}
@@ -87,16 +106,5 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     padding: 20,
     gap: 16,
-  },
-  input: {
-    height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    color: 'white' // Assuming dark mode, adjust if needed
-  },
-  disabledInput: {
-    backgroundColor: '#333333', // A slightly different background for disabled fields
   },
 });
