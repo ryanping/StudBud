@@ -9,7 +9,7 @@ import { ThemedView } from '@/components/themed-view';
 
 export default function SetUp() {
   const params = useLocalSearchParams();
-  const { userId } = params;
+  const { email } = params;
 
   const [name, setName] = useState('');
   const [year, setYear] = useState('');
@@ -21,20 +21,20 @@ export default function SetUp() {
       Alert.alert('Incomplete Profile', 'Please fill out all fields.');
       return;
     }
-    if (!userId) {
-      Alert.alert('Error', 'User ID not found. Please try logging in again.');
+    if (!email) {
+      Alert.alert('Error', 'User email not found. Please try logging in again.');
       return;
     }
 
     setLoading(true);
     try {
       await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/api/profile`, {
-        userId: userId,
+        email: email,
         display_name: name,
         year: year,
         major: major,
       });
-      router.replace({ pathname: '/(tabs)/explore', params: { userId: userId } });
+      router.replace({ pathname: '/(tabs)/explore', params: { email: email } });
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || 'An unexpected error occurred.';
       Alert.alert('Profile Creation Failed', errorMessage);

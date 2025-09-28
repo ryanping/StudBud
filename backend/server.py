@@ -107,13 +107,14 @@ def verify_code():
 def create_or_update_profile():
     """Creates or updates a user's profile information."""
     data = request.get_json()
-    # In a real app, you'd get userId from a secure JWT token, not the request body
-    user_id = data.get('userId')
+    email = data.get('email')
+    if not email:
+        return jsonify({'error': 'Email is required to update a profile.'}), 400
     
     conn = get_db_connection()
     conn.execute(
-        'UPDATE Users SET display_name = ?, major = ?, year = ?, is_profile_complete = 1 WHERE id = ?',
-        (data.get('display_name'), data.get('major'), data.get('year'), user_id)
+        'UPDATE Users SET display_name = ?, major = ?, year = ?, is_profile_complete = 1 WHERE email = ?',
+        (data.get('display_name'), data.get('major'), data.get('year'), email)
     )
     conn.commit()
     conn.close()
@@ -121,13 +122,17 @@ def create_or_update_profile():
     return jsonify({'message': 'Profile updated successfully.'}), 200
 
 
-@app.route('/api/users/<int:user_id>', methods=['GET'])
-def get_user_profile(user_id):
-    """Fetches a user's profile data."""
+@app.route('/api/user/profile', methods=['GET'])
+def get_user_profile():
+    """Fetches a user's profile data by email."""
+    email = request.args.get('email')
+    if not email:
+        return jsonify({'error': 'Email query parameter is required'}), 400
+
     conn = get_db_connection()
     user = conn.execute(
-        'SELECT id, display_name, email, year, major FROM Users WHERE id = ?',
-        (user_id,)
+        'SELECT id, display_name, email, year, major FROM Users WHERE email = ?',
+        (email,)
     ).fetchone()
     conn.close()
 
@@ -135,7 +140,6 @@ def get_user_profile(user_id):
         return jsonify({'error': 'User not found'}), 404
 
     return jsonify(dict(user))
-
 
 # --- POST & SEARCH API ROUTES ---
 

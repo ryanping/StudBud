@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, TextInput, Alert, ActivityIndicator } from 'react-native';
-import { useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { useGlobalSearchParams, useFocusEffect } from 'expo-router';
 import axios from 'axios';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 
 export default function ProfileScreen() {
-    const { userId } = useLocalSearchParams();
+    const { email: userEmail } = useGlobalSearchParams<{ email: string }>();
     const [name, setName] = useState('');
     const [major, setMajor] = useState('');
     const [year, setYear] = useState('');
@@ -15,14 +15,14 @@ export default function ProfileScreen() {
     const [loading, setLoading] = useState(true);
 
     const fetchProfile = useCallback(async () => {
-        if (!userId) {
+        if (!userEmail) {
             Alert.alert('Error', 'Could not find user profile.');
             setLoading(false);
             return;
         }
         setLoading(true);
         try {
-            const response = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/api/users/${userId}`);
+            const response = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/api/user/profile?email=${userEmail}`);
             const { display_name, major, year, email } = response.data;
             setName(display_name || '');
             setMajor(major || '');
@@ -33,14 +33,14 @@ export default function ProfileScreen() {
         } finally {
             setLoading(false);
         }
-    }, [userId]);
+    }, [userEmail]);
 
     useFocusEffect(
         useCallback(() => {
             fetchProfile();
         }, [fetchProfile])
     );
-    
+
     return (
         <ThemedView style={styles.container}>
             <ThemedText type="title">Name</ThemedText>

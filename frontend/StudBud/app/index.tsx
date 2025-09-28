@@ -54,16 +54,12 @@ export default function IndexScreen() {
 
       const { isProfileComplete, userId } = response.data;
 
-      // In a real app, you would save the userId and a session token securely
-      // For now, we'll decide where to navigate
-
       if (isProfileComplete) {
         // If profile is complete, go to the main app
-        router.replace({ pathname: '/(tabs)/explore', params: { userId: userId } });
+        router.replace({ pathname: '/(tabs)/explore', params: { email: email } });
       } else {
-        // If profile is not complete, navigate to the profile screen to finish setup
-        // We can pass the userId as a query parameter
-        router.replace({ pathname: '/setup', params: { userId: userId, isNewUser: 'true' } });
+        // If profile is not complete, navigate to the setup screen
+        router.replace({ pathname: '/setup', params: { email: email, isNewUser: 'true' } });
       }
 
     } catch (error: any) {
