@@ -1,6 +1,8 @@
 # backend/server.py
+
 import os
 import sqlite3
+import random
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify
 from flask_bcrypt import Bcrypt
@@ -9,7 +11,8 @@ from dotenv import load_dotenv
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
-from proto_backend import User, Post # Import your updated classes
+# Import your custom classes
+from proto_backend import User, Post
 
 # --- APP CONFIGURATION ---
 load_dotenv()
@@ -17,74 +20,113 @@ app = Flask(__name__)
 CORS(app)
 bcrypt = Bcrypt(app)
 sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'rodgerssky01@gmail.com')
-
-'''
-message = Mail(
-    from_email='from_email@example.com',
-    to_emails='to@example.com',
-    subject='Sending with Twilio SendGrid is Fun',
-    html_content='<strong>and easy to do anywhere, even with Python</strong>')
-try:
-    sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-    # sg.set_sendgrid_data_residency("eu")
-    # uncomment the above line if you are sending mail using a regional EU subuser
-    response = sg.send(message)
-    print(response.status_code)
-    print(response.body)
-    print(response.headers)
-except Exception as e:
-    print(e.message)
-'''
+# IMPORTANT: Make sure this email is verified in your SendGrid account
+SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'your-verified-email@example.com')
 
 # --- DATABASE HELPER ---
 def get_db_connection():
+    """Establishes a connection to the SQLite database."""
     conn = sqlite3.connect('database/studbud.db')
     conn.row_factory = sqlite3.Row
     return conn
 
-# --- API ROUTES ---
+# --- AUTHENTICATION & PROFILE API ROUTES ---
 
-@app.route('/api/register', methods=['POST'])
-def register():
-    # ... (same as previous version)
+# in backend/server.py
+
+@app.route('/api/auth/send-code', methods=['POST'])
+def send_verification_code():
+    """Generates a code, saves it to the user, and emails it."""
     data = request.get_json()
-    password_hash = bcrypt.generate_password_hash(data['password']).decode('utf-8')
+    email = data.get('email')
+    if not email:
+        return jsonify({'error': 'Email is required'}), 400
+
+    code = str(random.randint(100000, 999999))
+    expires_at = (datetime.utcnow() + timedelta(minutes=15)).isoformat()
+
     conn = get_db_connection()
-    try:
-        conn.execute(
-            'INSERT INTO Users (email, password_hash, display_name, major, year) VALUES (?, ?, ?, ?, ?)',
-            (data['email'], password_hash, data['display_name'], data.get('major'), data.get('year'))
+    cursor = conn.cursor()
+
+    # --- REVISED DATABASE LOGIC ---
+    # 1. First, try to UPDATE an existing user.
+    cursor.execute(
+        'UPDATE Users SET verification_code = ?, verification_code_expires_at = ? WHERE email = ?',
+        (code, expires_at, email)
+    )
+
+    # 2. If no rows were updated (meaning the user is new), then INSERT them.
+    if cursor.rowcount == 0:
+        cursor.execute(
+            'INSERT INTO Users (email, verification_code, verification_code_expires_at) VALUES (?, ?, ?)',
+            (email, code, expires_at)
         )
-        conn.commit()
+    # -----------------------------
+    
+    conn.commit()
+    conn.close()
 
-        # Send verification email after successful registration
-        message = Mail(
-            from_email=SENDER_EMAIL,
-            to_emails=data['email'], # Dynamically use the new user's email
-            subject='Welcome to StudBud! Please Verify Your Email',
-            html_content='<strong>Your verification code is: 10000001</strong>')
-        try:
-            # The 'sg' client is already initialized globally
-            response = sg.send(message)
-            print(f"Email sent to {data['email']}, status code: {response.status_code}")
-        except Exception as e:
-            # Log the error, but don't block the registration success response
-            print(f"Error sending email: {e}")
+    # Send email using SendGrid (this part stays the same)
+    message = Mail(
+        from_email=SENDER_EMAIL, to_emails=email,
+        subject='Your StudBud Verification Code',
+        html_content=f'<strong>Your verification code is: {code}</strong>'
+    )
+    try:
+        sg.send(message)
+        return jsonify({'message': 'Verification code sent.'}), 200
+    except Exception as e:
+        return jsonify({'error': f'Failed to send email: {e}'}), 500
 
-    except sqlite3.IntegrityError:
-        return jsonify({'error': 'User with this email already exists'}), 409
-    finally:
-        conn.close()
-    return jsonify({'message': 'Registration successful.'}), 201
 
+@app.route('/api/auth/verify-code', methods=['POST'])
+def verify_code():
+    """Verifies a code and checks if the user's profile is complete."""
+    data = request.get_json()
+    email = data.get('email')
+    code = data.get('code')
+
+    conn = get_db_connection()
+    user_row = conn.execute('SELECT * FROM Users WHERE email = ?', (email,)).fetchone()
+    conn.close()
+
+    if not user_row or user_row['verification_code'] != code:
+        return jsonify({'error': 'Invalid code'}), 400
+    if datetime.utcnow() > datetime.fromisoformat(user_row['verification_code_expires_at']):
+        return jsonify({'error': 'Code has expired'}), 400
+    
+    # In a real app, you would generate a JWT token here for the user to stay logged in
+    return jsonify({
+        'message': 'Verification successful!',
+        'userId': user_row['id'],
+        'isProfileComplete': bool(user_row['is_profile_complete'])
+    }), 200
+
+
+@app.route('/api/profile', methods=['POST'])
+def create_or_update_profile():
+    """Creates or updates a user's profile information."""
+    data = request.get_json()
+    # In a real app, you'd get userId from a secure JWT token, not the request body
+    user_id = data.get('userId')
+    
+    conn = get_db_connection()
+    conn.execute(
+        'UPDATE Users SET display_name = ?, major = ?, year = ?, is_profile_complete = 1 WHERE id = ?',
+        (data.get('display_name'), data.get('major'), data.get('year'), user_id)
+    )
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'message': 'Profile updated successfully.'}), 200
+
+
+# --- POST & SEARCH API ROUTES ---
 
 @app.route('/api/posts', methods=['POST'])
 def create_post():
-    """Creates a new post, calculating expiration time."""
+    """Creates a new post."""
     data = request.get_json()
-    
-    # The frontend will send the duration in hours
     duration_hours = int(data['duration_hours'])
     created_at = datetime.utcnow()
     expires_at = created_at + timedelta(hours=duration_hours)
@@ -100,47 +142,70 @@ def create_post():
     return jsonify({'message': 'Post created successfully'}), 201
 
 
-@app.route('/api/posts/active', methods=['GET'])
-def get_active_posts():
-    """Fetches all posts that have not expired."""
+@app.route('/api/posts/search', methods=['POST'])
+def search_posts_advanced():
+    """
+    Searches for posts with multiple locations and user-defined priority.
+    This is your ranked search function, converted into an API route.
+    """
+    data = request.get_json()
+    locations = data.get('locations', [])
+    activity = data.get('activity', 'any')
+    priority = data.get('priority', 'activity')
+
+    # Security Check: Whitelist the priority input
+    if priority not in ['location', 'activity']:
+        return jsonify({'error': "Priority must be 'location' or 'activity'."}), 400
+
+    # Build the dynamic SQL query
+    query = "SELECT * FROM Posts WHERE is_active = 1 AND expires_at > ?"
+    params = [datetime.utcnow().isoformat()]
+
+    # Handle filters
+    if activity and activity.lower() != 'any':
+        query += " AND activity = ?"
+        params.append(activity)
+
+    if locations and 'any' not in [loc.lower() for loc in locations]:
+        placeholders = ','.join(['?'] * len(locations))
+        query += f" AND location IN ({placeholders})"
+        params.extend(locations)
+
+    # Handle dynamic priority sorting
+    location_placeholders = ','.join(['?'] * len(locations)) if locations else "''"
+    
+    order_by_clause = ""
+    if priority == 'activity':
+        order_by_clause = f"""
+        ORDER BY CASE
+            WHEN activity = ? AND location IN ({location_placeholders}) THEN 1
+            WHEN activity = ? THEN 2
+            WHEN location IN ({location_placeholders}) THEN 3
+            ELSE 4
+        END
+        """
+        params.extend([activity] + locations + [activity] + locations)
+    else: # priority == 'location'
+        order_by_clause = f"""
+        ORDER BY CASE
+            WHEN activity = ? AND location IN ({location_placeholders}) THEN 1
+            WHEN location IN ({location_placeholders}) THEN 2
+            WHEN activity = ? THEN 3
+            ELSE 4
+        END
+        """
+        params.extend([activity] + locations + locations + [activity])
+    
+    query += order_by_clause
+
+    # Execute the final query
     conn = get_db_connection()
-    # This query is much simpler now!
-    post_rows = conn.execute(
-        "SELECT * FROM Posts WHERE is_active = 1 AND expires_at > ?", (datetime.utcnow().isoformat(),)
-    ).fetchall()
+    post_rows = conn.execute(query, params).fetchall()
     conn.close()
+    
+    results = [dict(row) for row in post_rows]
+    return jsonify(results)
 
-    # Convert database rows into a list of your Post objects
-    posts_list = []
-    for row in post_rows:
-        created_at_obj = datetime.fromisoformat(row['created_at'])
-        expires_at_obj = datetime.fromisoformat(row['expires_at'])
-        duration_hours = (expires_at_obj - created_at_obj).total_seconds() / 3600
-        
-        post_obj = Post(
-            id=row['id'],
-            author_user=row['author_id'],
-            location=row['location'],
-            time_expiration_hours=duration_hours,
-            group_current=row['people_joined'],
-            group_size_max=row['people_needed'],
-            course=row['activity'],
-            time_creation_obj=created_at_obj,
-            show_in_results=row['is_active']
-        )
-        
-        # Use your custom methods for the JSON response
-        posts_list.append({
-            'id': post_obj.id,
-            'location': post_obj.location,
-            'activity': post_obj.course,
-            'group_status': f"{post_obj.group_current}/{post_obj.group_size_max}",
-            'time_posted': post_obj.get_time_creation(), # Your custom formatting!
-            'hours_left': post_obj.get_time_expiration() # Your custom formatting!
-        })
-
-    return jsonify(posts_list)
-
-
+# --- MAIN EXECUTION ---
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

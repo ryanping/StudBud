@@ -7,13 +7,14 @@ DROP TABLE IF EXISTS Users;
 CREATE TABLE Users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    display_name TEXT NOT NULL,
+    verification_code TEXT, 
+    verification_code_expires_at TEXT,
+    display_name TEXT,
     year INTEGER,
-    major TEXT
     major TEXT,
-    verification_code TEXT,
-    is_verified INTEGER DEFAULT 0
+    is_profile_complete INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+
 );
 
 CREATE TABLE Posts (
