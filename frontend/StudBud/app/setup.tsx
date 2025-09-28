@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
 import { TextInput, Button, Text } from 'react-native-paper';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { router } from 'expo-router';
 
 export default function SetUp() {
   const [name, setName] = useState('');
@@ -46,7 +47,13 @@ export default function SetUp() {
         <Button
           mode="contained"
           style={styles.button}
-          onPress={() => {}}
+          onPress={() => {
+            if (!name.trim() || !year.trim() || !major.trim()) {
+              Alert.alert('Incomplete Profile', 'Please fill out all fields.');
+              return;
+            }
+            router.replace('/(tabs)/explore');
+          }}
         >
           Make Profile
         </Button>
