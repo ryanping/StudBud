@@ -32,6 +32,7 @@ export default function ProfileScreen() {
                 value={text}
                 placeholder="2xxx"
                 placeholderTextColor="#999"
+                keyboardType="numeric"
             />
             <ThemedText type="subtitle">Email: </ThemedText>
             
