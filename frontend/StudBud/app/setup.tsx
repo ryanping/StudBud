@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { TextInput, Button, Text } from 'react-native-paper';
 
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
+
 export default function SetUp() {
   const [name, setName] = useState('');
   const [year, setYear] = useState('');
