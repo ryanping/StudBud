@@ -17,6 +17,10 @@ export default function IndexScreen() {
       Alert.alert('Error', 'Please enter your email.');
       return;
     }
+    if (!email.toLowerCase().endsWith('@ufl.edu')) {
+      Alert.alert('Invalid Email', 'Please use a valid @ufl.edu email address.');
+      return;
+    }
     Keyboard.dismiss();
     setLoading(true);
 
