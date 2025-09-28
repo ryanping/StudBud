@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Alert, Keyboard, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { TextInput, Button, Text } from 'react-native-paper';
+import { TextInput, Button, Text, useTheme, MD3Theme } from 'react-native-paper';
 import { Image } from 'expo-image';
 import { Link, router } from 'expo-router';
 import axios from 'axios';
@@ -11,6 +11,8 @@ export default function IndexScreen() {
   const [loading, setLoading] = useState(false);
   // State to manage which step of the login we are on
   const [step, setStep] = useState<'enter-email' | 'enter-code'>('enter-email');
+  const theme = useTheme();
+  const styles = getStyles(theme);
 
   const handleSendCode = async () => {
     if (!email) {
@@ -135,35 +137,37 @@ export default function IndexScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  keyboardAvoidingContainer: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  logo: {
-    width: 400,
-    height: 200,
-    marginBottom: 20,
-  },
-  title: {
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  input: {
-    marginBottom: 10,
-    width: '100%',
-  },
-  button: {
-    marginTop: 10,
-  },
-  link: {
-    marginTop: 15,
-    textAlign: 'center',
-    color: '#6200ee', // Match the register screen's link color
-  }
-});
+const getStyles = (theme: MD3Theme) => StyleSheet.create({
+    keyboardAvoidingContainer: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    container: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 20,
+    },
+    logo: {
+      width: 400,
+      height: 200,
+      marginBottom: 20,
+    },
+    title: {
+      textAlign: 'center',
+      marginBottom: 20,
+      // The color will be inherited from the theme via the Text component
+    },
+    input: {
+      marginBottom: 10,
+      width: '100%',
+    },
+    button: {
+      marginTop: 10,
+    },
+    link: {
+      marginTop: 15,
+      textAlign: 'center',
+      color: theme.colors.primary,
+    }
+  });
