@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Alert, Keyboard } from 'react-native';
+import { View, StyleSheet, Alert, Keyboard, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { TextInput, Button, Text } from 'react-native-paper';
 import { Image } from 'expo-image';
 import { Link, router } from 'expo-router';
@@ -76,54 +76,62 @@ export default function IndexScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <Image source={require('@/assets/images/gatorman.png')} style={styles.logo} />
-      <Text variant="headlineLarge" style={styles.title}>Welcome to StudBud</Text>
-      
-      <TextInput
-        label="UFL Email"
-        value={email}
-        onChangeText={setEmail}
-        style={styles.input}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        disabled={step === 'enter-code'}
-      />
-
-      {step === 'enter-code' && (
+    <KeyboardAvoidingView
+      style={styles.keyboardAvoidingContainer}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView contentContainerStyle={styles.container}>
+        <Image source={require('@/assets/images/gatorman.png')} style={styles.logo} />
+        <Text variant="headlineLarge" style={styles.title}>Welcome to StudBud</Text>
+        
         <TextInput
-          label="Verification Code"
-          value={code}
-          onChangeText={setCode}
+          label="UFL Email"
+          value={email}
+          onChangeText={setEmail}
           style={styles.input}
-          keyboardType="number-pad"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          disabled={step === 'enter-code'}
         />
-      )}
 
-      {step === 'enter-email' ? (
-        <Button mode="contained" onPress={handleSendCode} style={styles.button} disabled={loading} loading={loading}>
-          Send Code
-        </Button>
-      ) : (
-        <>
-          <Button mode="contained" onPress={handleVerifyCode} style={styles.button} disabled={loading} loading={loading}>
-            Verify & Login
+        {step === 'enter-code' && (
+          <TextInput
+            label="Verification Code"
+            value={code}
+            onChangeText={setCode}
+            style={styles.input}
+            keyboardType="number-pad"
+          />
+        )}
+
+        {step === 'enter-email' ? (
+          <Button mode="contained" onPress={handleSendCode} style={styles.button} disabled={loading} loading={loading}>
+            Send Code
           </Button>
-          <Button
-            mode="text"
-            onPress={resetFlow}
-            style={styles.button}
-            disabled={loading}
-          >
-            Use a different email
-          </Button>
-        </>
-      )}
-    </View>
+        ) : (
+          <>
+            <Button mode="contained" onPress={handleVerifyCode} style={styles.button} disabled={loading} loading={loading}>
+              Verify & Login
+            </Button>
+            <Button
+              mode="text"
+              onPress={resetFlow}
+              style={styles.button}
+              disabled={loading}
+            >
+              Use a different email
+            </Button>
+          </>
+        )}
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardAvoidingContainer: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
