@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, FlatList, ActivityIndicator, View, TextInput, Button } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { StyleSheet, FlatList, ActivityIndicator, View, TextInput, useColorScheme } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Colors } from '@/constants/theme';
 
 // Define a type for our Post object for better type-safety
 interface Post {
@@ -19,21 +20,22 @@ export default function ExploreScreen() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const colorScheme = useColorScheme();
   
   // State for search inputs
   const [activity, setActivity] = useState('');
   const [location, setLocation] = useState('');
 
-  useEffect(() => {
-    const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
       setLoading(true);
       setError(null);
 
       // Determine if we are searching or just fetching all posts
       const isSearching = activity.trim() !== '' || location.trim() !== '';
-      const url = isSearching
-        ? 'http://10.136.232.149:5000/api/posts/search'
-        : 'http://10.136.232.149:5000/api/posts';
+      const baseUrl = process.env.EXPO_PUBLIC_API_URL;
+      const url = isSearching 
+        ? `${baseUrl}/api/posts/search`
+        : `${baseUrl}/api/posts`;
 
       const options: RequestInit = {
         method: isSearching ? 'POST' : 'GET',
@@ -63,10 +65,12 @@ export default function ExploreScreen() {
       } finally {
         setLoading(false);
       }
-    };
+  }, [activity, location]);
 
+  useEffect(() => {
     fetchPosts();
-  }, [activity, location]); // Re-run the effect when search terms change
+  }, [fetchPosts]); // Re-run the effect when search terms change
+
 
   const renderPost = ({ item }: { item: Post }) => (
     <ThemedView style={styles.postCard}>
@@ -76,20 +80,31 @@ export default function ExploreScreen() {
     </ThemedView>
   );
 
+  const dynamicStyles = {
+    input: {
+      backgroundColor: Colors[colorScheme ?? 'light'].background,
+      color: Colors[colorScheme ?? 'light'].text,
+      borderColor: Colors[colorScheme ?? 'light'].icon, // Using icon color for border as it's usually a good contrast
+    },
+    placeholderTextColor: Colors[colorScheme ?? 'light'].tabIconDefault,
+  };
+
   return (
     <ThemedView style={styles.container}>
       <ThemedText type="title" style={styles.title}>Explore Posts</ThemedText>
       
       <View style={styles.searchContainer}>
         <TextInput
-          style={styles.input}
-          placeholder="Filter by activity (e.g., 'Studying')"
+          style={[styles.input, dynamicStyles.input]}
+          placeholder="Filter by activity (e.g., 'ECO3101')"
+          placeholderTextColor={dynamicStyles.placeholderTextColor}
           value={activity}
           onChangeText={setActivity}
         />
         <TextInput
-          style={styles.input}
-          placeholder="Filter by location (e.g., 'Library')"
+          style={[styles.input, dynamicStyles.input]}
+          placeholder="Filter by location (e.g., 'Marston')"
+          placeholderTextColor={dynamicStyles.placeholderTextColor}
           value={location}
           onChangeText={setLocation}
         />
