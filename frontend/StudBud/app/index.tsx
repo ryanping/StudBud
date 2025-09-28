@@ -125,13 +125,6 @@ export default function IndexScreen() {
             </Button>
           </>
         )}
-
-        <Link href="/setup" style={styles.button}>
-          <Text>Go to Setup (Debug)</Text>
-        </Link>
-        <Link href="/(tabs)/explore" style={styles.button}>
-          <Text>Explore Tab (Debug)</Text>
-        </Link>
       </ScrollView>
     </KeyboardAvoidingView>
   );
