@@ -45,5 +45,6 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     width: '60%',
+    backgroundColor: 'white',
   },
 });

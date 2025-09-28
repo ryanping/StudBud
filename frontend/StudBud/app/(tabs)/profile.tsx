@@ -9,7 +9,7 @@ export default function ProfileScreen() {
 
     return (
         <ThemedView style={styles.container}>
-            <ThemedText type="title">Profile</ThemedText>
+            <ThemedText type="title">Name</ThemedText>
             <TextInput
                 style={styles.input}
                 onChangeText={setText}
@@ -17,6 +17,9 @@ export default function ProfileScreen() {
                 placeholder="Firstname Lastname"
                 placeholderTextColor="#999"
             />
+            <ThemedText type="subtitle">Major: </ThemedText>
+            <ThemedText type="subtitle">Year: </ThemedText>
+            <ThemedText type="subtitle">Email: </ThemedText>
         </ThemedView>
     );
 }
