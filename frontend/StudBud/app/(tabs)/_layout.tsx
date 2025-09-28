@@ -26,6 +26,13 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <FontAwesome name="plus" color={color} size={28} />,
         }}
       />
+      <Tabs.Screen
+        name="profile" // This links to profile.tsx
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons name="account" color={color} size={28} />,
+        }}
+      />
       {/* You can add more tabs here, like for a profile screen */}
     </Tabs>
   );
