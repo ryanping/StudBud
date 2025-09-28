@@ -9,9 +9,14 @@ import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Fonts } from '@/constants/theme';
 
-export default function TabOneScreen() {
+export default function ExploreScreen() {
   return (
-    <ThemedText style={styles.container}>Done</ThemedText>
+    <ThemedView style={styles.container}>
+      <ThemedText type="title">
+        Explore
+      </ThemedText>
+      
+    </ThemedView>
   );
 }
 
