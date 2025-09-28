@@ -1,15 +1,47 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
 import { TextInput, Button, Text } from 'react-native-paper';
+import { router, useLocalSearchParams } from 'expo-router';
+import axios from 'axios';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { router } from 'expo-router';
 
 export default function SetUp() {
+  const params = useLocalSearchParams();
+  const { userId } = params;
+
   const [name, setName] = useState('');
   const [year, setYear] = useState('');
   const [major, setMajor] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleCreateProfile = async () => {
+    if (!name.trim() || !year.trim() || !major.trim()) {
+      Alert.alert('Incomplete Profile', 'Please fill out all fields.');
+      return;
+    }
+    if (!userId) {
+      Alert.alert('Error', 'User ID not found. Please try logging in again.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/api/profile`, {
+        userId: userId,
+        display_name: name,
+        year: year,
+        major: major,
+      });
+      router.replace('/(tabs)/explore');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || 'An unexpected error occurred.';
+      Alert.alert('Profile Creation Failed', errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <KeyboardAvoidingView
@@ -35,6 +67,7 @@ export default function SetUp() {
           value={year}
           onChangeText={setYear}
           style={styles.input}
+          keyboardType="number-pad"
         />
 
         <TextInput
@@ -47,13 +80,9 @@ export default function SetUp() {
         <Button
           mode="contained"
           style={styles.button}
-          onPress={() => {
-            if (!name.trim() || !year.trim() || !major.trim()) {
-              Alert.alert('Incomplete Profile', 'Please fill out all fields.');
-              return;
-            }
-            router.replace('/(tabs)/explore');
-          }}
+          onPress={handleCreateProfile}
+          loading={loading}
+          disabled={loading}
         >
           Make Profile
         </Button>
