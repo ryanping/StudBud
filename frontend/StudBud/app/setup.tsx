@@ -5,7 +5,7 @@ import { Image } from 'expo-image';
 import { Link, router } from 'expo-router';
 import axios from 'axios';
 
-export default function IndexScreen() {
+export default function SetUp() {
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
