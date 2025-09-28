@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { Platform, StyleSheet, TextInput} from 'react-native';
+import React, { useState } from 'react';
 
 import { HelloWave } from '@/components/hello-wave';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
@@ -8,12 +9,19 @@ import { ThemedView } from '@/components/themed-view';
 import { Link } from 'expo-router';
 
 export default function TabTwoScreen() {
+    const [text, setText] = useState('');
   return (
     <ThemedView style={styles.container}>
       <ThemedText type="title">
         Explore
       </ThemedText>
-      
+      <TextInput
+                      style={styles.input}
+                      onChangeText={setText}
+                      value={text}
+                      placeholder="Firstname Lastname"
+                      placeholderTextColor="#999"
+                  />
     </ThemedView>
   );
 }
@@ -23,9 +31,9 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'flex-start',
     padding: 20,
+    gap: 16,
   },
   logo: {
     width: 400,
@@ -37,8 +45,12 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   input: {
-    marginBottom: 10,
-    width: '100%',
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    color: 'white' // Assuming dark mode, adjust if needed
   },
   button: {
     marginTop: 10,
