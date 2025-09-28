@@ -18,8 +18,23 @@ export default function ProfileScreen() {
                 placeholderTextColor="#999"
             />
             <ThemedText type="subtitle">Major: </ThemedText>
+            <TextInput
+                style={styles.input}
+                onChangeText={setText}
+                value={text}
+                placeholder="Major(s)"
+                placeholderTextColor="#999"
+            />
             <ThemedText type="subtitle">Year: </ThemedText>
+            <TextInput
+                style={styles.input}
+                onChangeText={setText}
+                value={text}
+                placeholder="2xxx"
+                placeholderTextColor="#999"
+            />
             <ThemedText type="subtitle">Email: </ThemedText>
+            
         </ThemedView>
     );
 }
